@@ -83,17 +83,30 @@ def S(n):
             mapping[i][j] = perms.index(p3)
     return Group(mapping)
 
+def direct_product(G, H):
+    # returns the direct product of two groups
+    size = G.size * H.size
+    table = [[0] * size for _ in range(size)]
+    for g1, h1 in product(G.elements, H.elements):
+        for g2, h2 in product(G.elements, H.elements):
+            table[g1*H.size + h1][g2*H.size + h2] = (
+                G.op(g1, g2) * H.size + H.op(h1, h2))
+    return Group(table)
+
 def constant_func(source, target, element):
     return Func(source, target, [element] * source.size)
 
 def identity_func(obj):
     return Func(obj, obj, obj.elements)
 
+def trivial_action(G, A):
+    return Action(G, A, constant_func(G, None, identity_func(A)).mapping)
+
 def P01():
     # returns 1-cocycles for the group cohomology of G with coefficients in A
     G = Zmod(2)
     A = Zmod(6)
-    action = Action(G, A, constant_func(G, None, identity_func(A)).mapping)
+    action = trivial_action
     return cocycles(G, A, action)
 
 def P02():
@@ -119,6 +132,15 @@ def P03():
                       identity_func(A),
                       identity_func(A),
                       conjugation_action]
+    action = Action(G, A, action_mapping)
+    return cocycles(G, A, action)
+
+def P04():
+    # returns 1-cocycles for the group cohomology of G with coefficients in A
+    G = Zmod(2)
+    A = direct_product(Zmod(6), Zmod(2))
+    action_mapping = [identity_func(A),
+                      Func(A, A, [(i ^ 1 if i & 2 else i) for i in range(A.size)])]
     action = Action(G, A, action_mapping)
     return cocycles(G, A, action)
 
